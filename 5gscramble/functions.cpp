@@ -24,7 +24,8 @@ tuple<int, int> fill_grid(vector<vector<fcomp>>grid) {
             for(int slot=0; slot < SLOTS; slot++) {
                 for(int s=STARTING_SYMBOL; s<DURATION; s++) {
                     int t = frame * FRAME_SIZE + slot * SLOTS_SIZE + s;
-                    grid[t, FREQUENCY_START] = zadoff_chu(s,u);
+                    grid[t][FREQUENCY_START] = zadoff_chu(s,u);
+                    cout << "(" << t << ',' << FREQUENCY_START << ")" << endl;
                 }
             }
         }

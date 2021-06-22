@@ -2,6 +2,8 @@
 #include <complex>
 #include <cmath>
 #include <vector>
+#include <tuple>
+#include "functions.h"
 
 using namespace std;
 typedef complex<float> fcomp;
@@ -16,7 +18,6 @@ int main() {
      * and 1024 for the frequencies.
      */
     vector<vector<fcomp>> grid(280, vector<fcomp>(1024 , {0,0}));
+    fill_grid(grid);
     return 0;
 }
-
-calc_position
