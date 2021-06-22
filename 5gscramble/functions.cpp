@@ -17,6 +17,7 @@ const int ROOT_SEQUENCE_INDEX = 1;
 const int u = 837;
 const int FREQUENCY_START = 0;
 
+const int LRA = 139;
 
 tuple<int, int> fill_grid(vector<vector<fcomp>>grid) {
     for(int frame : FRAMES) {
@@ -34,4 +35,5 @@ tuple<int, int> fill_grid(vector<vector<fcomp>>grid) {
 
 fcomp zadoff_chu(int n, int u) {
 
+    return exp(fcomp(0,-M_PI*u*n*(n+1) / (LRA)));
 }
