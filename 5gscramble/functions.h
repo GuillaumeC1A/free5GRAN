@@ -14,5 +14,5 @@ tuple<int, int> fill_grid(vector<vector<fcomp>> grid);
 fcomp zadoff_chu(int n,int u);
 fcomp cyclic_shift(int u, int nu, int n);
 fcomp y(int u, int nu, int n);
-
+vector<fcomp> ifft(int n, vector<fcomp> A);
 #endif INC_5GSCRAMBLE_FUNCTIONS_H

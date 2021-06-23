@@ -20,7 +20,7 @@ const int FREQUENCY_START = 0;
 const int LRA = 139;
 const int NCS = 15;
 
-const int BW = 3070E4;  // Total Band With
+const int BW = 3072E4;  // Total Band With
 const int PSS = 30E3;     //Prach Subcarrier Spacing
 
 const int UBW = 2*48E3; // Uplink Bandwidth
@@ -97,4 +97,35 @@ fcomp s(int l, int p, int mu, int t) {
         int nu=0;
         s += exp(fcomp(betaPRACH,0)) * y(u, nu, k) * exp(fcomp(0, 2*M_PI*(k + K*k1 + kbarre) * delta_fRA * (t - NCPRA * Tc - tstart)));
     }
+}
+
+/*
+ * iFFT to do on the cols
+ */
+vector<fcomp> ifft(int n, vector<fcomp> A) {
+    vector<fcomp> F(n, {0, 0});
+    int k,j=0;
+    fcomp omegak, omega;
+    int sft = n/2;
+    if(n==1) {
+        F[0] = A[0];
+        return F;
+    }
+    vector<fcomp> E(n/2, {0, 0}), O(n/2, {0, 0}), EF(n/2, {0, 0}), OF(n/2, {0, 0});
+    for(k=0; k<n; k+=2) {
+        E[j]=A[k];
+        O[j]=A[k+1];
+        j++;
+    }
+    EF = ifft(n/2, E);
+    OF = ifft(n/2, O);
+    omega.real(cos(-2*M_PI/n));
+    omega.imag(sin(-2*M_PI/n));
+    omegak.real(1.0);
+    omegak.imag(0.0);
+    for (k=0; k<n/2; k++, omegak = omegak*omega) {
+        F[k] = EF[k] + (omegak*OF[k]);
+        F[k + sft] = EF[k] - (omegak*OF[k]);
+    }
+    return F;
 }
