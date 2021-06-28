@@ -75,6 +75,10 @@ int main() {
         buffer.insert(buffer.end(), ifft_out.begin(), ifft_out.end());
     }
 
+    for(int i=0; i<buffer.size(); i++) {
+        cout << "-" << buffer[i];
+    }
+
 
 
     return 0;
