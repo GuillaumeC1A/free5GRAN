@@ -92,11 +92,17 @@ vector<fcomp> split_and_concat(vector<fcomp> v) {
     return final;
 }
 
-vector<vector<float>> fcomp2array(vector<fcomp> v) {
-    vector<vector<float>> v2(v.size(), vector<float>(2,0));
+void fcomp2array(vector<fcomp> v, fftw_complex* in) {
     for(int i=0; i < v.size(); i++) {
-        v2[i] = {v[i].real(), v[i].imag()};
-        return v2;
+        in[i][0] = v[i].real();
+        in[i][1] = v[i].imag();
+    }
+    return;
+}
+
+void array2fcomp(fftw_complex* in, vector<fcomp> v) {
+    for(int i=0; i<v.size(); i++) {
+        v[i] = {(float)in[i][0], (float)in[i][1]};
     }
 }
 

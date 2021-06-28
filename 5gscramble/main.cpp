@@ -13,6 +13,10 @@ tuple<int, int> calc_position;
 
 int const LRA = 139;
 int const NCS = 69;
+int const NRACP = 936/2;
+
+int const FFT_SIZE = 1024;
+int const SYMBOLS_PER_SUBFRAMES = 14;
 
 int main() {
 
@@ -24,7 +28,7 @@ int main() {
      * and 1024 for the frequencies.
      */
     
-    vector<vector<fcomp>> grid(280, vector<fcomp>(1024 , {0,0}));
+    vector<vector<fcomp>> grid(280, vector<fcomp>(FFT_SIZE , {0,0}));
     //fill_grid(grid);
 
     vector<vector<fcomp>> zadoff_mat(64, vector<fcomp>(139, {0,0}));
@@ -45,9 +49,31 @@ int main() {
     vector<fcomp> preamble = create_preamble(data, 0, 48);
     vector<fcomp> sorted_preamble = split_and_concat(preamble);
 
-    vector<vector<float>> data_for_ifft = fcomp2array(sorted_preamble);
+    fftw_complex *in, *out;
+    fftw_plan p;
+
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * FFT_SIZE);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * FFT_SIZE);
+
+    fcomp2array(sorted_preamble, in);
+
+    p = fftw_plan_dft_1d(FFT_SIZE, in, out, FFTW_BACKWARD,  FFTW_ESTIMATE);
 
 
+    fftw_execute(p);
+    fftw_destroy_plan(p);
+    fftw_free(in);
+    fftw_free(out);
+
+    vector<fcomp> ifft_out(FFT_SIZE, {0,0});
+    array2fcomp(out, ifft_out);
+
+    vector<fcomp> CP(ifft_out.end() - NRACP, ifft_out.end());
+
+    vector<fcomp> buffer = CP;
+    for(int i=0; i<12; i++) {
+        buffer.insert(buffer.end(), ifft_out.begin(), ifft_out.end());
+    }
 
 
 
