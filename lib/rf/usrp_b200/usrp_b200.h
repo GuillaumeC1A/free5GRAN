@@ -37,6 +37,8 @@ class usrp_b200 : public rf {
 
   void setSampleRate(double rate) override;
 
+  void start_transmitting(std::vector<std::complex<float>> buffs, int samps_to_send, uhd::time_spec_t time_to_send) const;
+
   auto getCenterFrequency() -> double override;
 
   void setCenterFrequency(double freq) override;
@@ -46,6 +48,8 @@ class usrp_b200 : public rf {
   auto getGain() -> double override;
 
   void start_loopback_recv(bool& stop_signal, size_t buff_size) override;
+
+  void start_loopback_recv(bool& stop_signal, size_t buff_size, uhd::time_spec_t time_to_recv);
 };
 }  // namespace free5GRAN
 

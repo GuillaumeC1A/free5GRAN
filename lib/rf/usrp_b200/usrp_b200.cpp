@@ -73,12 +73,12 @@ free5GRAN::usrp_b200::usrp_b200(double sample_rate,
   this->usrp->set_rx_bandwidth(this->bandwidth);
   this->usrp->set_rx_antenna(ant_rx);
        
-  this->usrp->set_tx_subdev_spec(this->subdev);
+  this->usrp->set_tx_subdev_spec(subdev);
   this->usrp->set_tx_rate(this->sample_rate);
   this->usrp->set_tx_freq(tune_request);
   this->usrp->set_tx_gain(this->gain);
   this->usrp->set_tx_bandwidth(this->bandwidth);
-  this->usrp->set_tx_antenna(this->ant_tx);
+  this->usrp->set_tx_antenna(ant_tx);
 }
 
 auto free5GRAN::usrp_b200::getSampleRate() -> double {
@@ -310,4 +310,155 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
   // Reset primary frame id
   primary_frame_id = 0;
   cout << "Finishing recv thread" << endl;
+}
+
+void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
+                                               size_t buff_size,
+                                               uhd::time_spec_t time_to_recv) {
+  /**
+   * \fn start_loopback_recv
+   * \brief Continuous receive of frames starting at a certain time
+   * \details
+   * Details:
+   * - Initialize a rx stream
+   * - Wait for the start time to occur
+   * - Continuously receive frame
+   * - Push them to the primary buffer
+   *
+   * \param[in] buff_size: Buffer (frame) size
+   * \param[in] stop_signal: While loop switch
+   * \param[in] time_to_recv: the time to start receiving
+   */
+
+  // Set thread priority
+  uhd::set_thread_priority_safe(1.0, true);
+  // Create a new element
+  free5GRAN::buffer_element new_elem = {
+      .frame_id = primary_frame_id,
+      .buffer = vector<complex<float>>(buff_size)};
+  cout << "Starting recv thread" << endl;
+
+  // Configure stream arguments
+  uhd::stream_args_t stream_args("fc32", "sc16");
+  // Get USRP stream
+  uhd::rx_streamer::sptr rx_stream = usrp->get_rx_stream(stream_args);
+  // Ask for continuous receiving
+  uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+  // Do not start reception now
+  stream_cmd.stream_now = false;
+  // When to start reception
+  stream_cmd.time_spec = time_to_recv;
+  // Create metadata object
+  uhd::rx_metadata_t md;
+
+  bool notified_all = false;
+  bool last_notify = false;
+
+  // Start rx stream
+  rx_stream->issue_stream_cmd(stream_cmd);
+
+  // Endless loop
+  while (!stop_signal) {
+    /*
+     * Reset primary_frame_id every minute
+     */
+    if (primary_frame_id == 6000) {
+      primary_frame_id = 0;
+    }
+    new_elem.overflow = false;
+    size_t total_rcvd_samples = 0;
+    // While buffer is not full
+    while (total_rcvd_samples < buff_size) {
+      // Receive samples
+      size_t num_rx_samps = rx_stream->recv(&new_elem.buffer.front(),
+                                            buff_size - total_rcvd_samples, md);
+      // If receive timeout
+      if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
+        cout << boost::format("Timeout while streaming") << endl;
+        break;
+      }
+      // If receive Overflow
+      if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW) {
+        cout << boost::format("Overflow\n") << endl;
+        new_elem.overflow = true;
+        continue;
+      }
+      // Else
+      if (md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE) {
+        string error = str(boost::format("Receiver error: %s") % md.strerror());
+      }
+      // Increment the samples counter
+      total_rcvd_samples += num_rx_samps;
+    }
+    // Set new frame id to primary frame id
+    new_elem.frame_id = primary_frame_id;
+    // Push the new frame inside the primary buffer
+    rf_buff->primary_buffer->push_back(new_elem);
+    // Notify clients when buffer size increases
+    if (last_notify) {
+      (*rf_buff->cond_var_vec_prim_buffer)[rf_buff->primary_buffer->size() - 1]
+          .notify_all();
+      last_notify = false;
+    }
+    if (!notified_all) {
+      (*rf_buff->cond_var_vec_prim_buffer)[rf_buff->primary_buffer->size() - 1]
+          .notify_all();
+      if (rf_buff->primary_buffer->size() ==
+          rf_buff->primary_buffer->capacity() - 1) {
+        last_notify = true;
+        notified_all = true;
+      }
+    }
+
+    // If adjust thread is started
+    if (rf_buff->frame_thread_started) {
+      // Notify it that a new frame has been pushed to the primary buffer
+      sem_post(rf_buff->semaphore);
+    }
+    // Increment primary frame id
+    primary_frame_id++;
+  }
+
+  // Stop continuous reception
+  stream_cmd.stream_mode = uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS;
+  rx_stream->issue_stream_cmd(stream_cmd);
+  // Reset primary frame id
+  primary_frame_id = 0;
+  cout << "Finishing recv thread" << endl;
+}
+
+void free5GRAN::usrp_b200::start_transmitting(std::vector<std::complex<float>> buffs, int samps_to_send, uhd::time_spec_t time_to_send) const {
+  cout << endl;
+  bool stop_signal_called = false;
+  size_t samples_sent = 0;
+  size_t tmp = -1;
+  uhd::tx_metadata_t md;
+  md.start_of_burst = true;
+  md.end_of_burst = false;
+  md.has_time_spec = true;
+  md.time_spec = time_to_send;
+  uhd::stream_args_t stream_args("fc32"); // complex floats
+  uhd::tx_streamer::sptr tx_stream = usrp->get_tx_stream(stream_args);
+
+
+
+
+
+//send a single packet
+  while (not stop_signal_called) {
+
+    samples_sent = tx_stream->send(&buffs.front(), buffs.size(), md);
+    if (true) {
+      printf ( "\rnum of samples sent is  %ld             ",samples_sent );
+      fflush(stdout);
+    }
+    tmp = samples_sent;
+
+    if(usrp->get_time_now() > time_to_send) {
+      md.has_time_spec = false;
+      md.start_of_burst = false; // Then it is not the beginning of the transmission
+    }
+
+  }
+
 }
