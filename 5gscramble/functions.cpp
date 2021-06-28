@@ -14,7 +14,7 @@ const int SLOTS_SIZE = 14;
 const int FRAME_SIZE = 2*SLOTS_SIZE;
 
 const int ROOT_SEQUENCE_INDEX = 1;
-const int u[40] = {129,710,140,699,120,719,210,629,168,671,84,755,105,734,93,746,70,769,60,779,
+const int U[40] = {129,710,140,699,120,719,210,629,168,671,84,755,105,734,93,746,70,769,60,779,
                    2,837,1,838,56,783,112,727,148,691,80,759,42,797,40,799,35,804,73,766};
 const int FREQUENCY_START = 0;
 
@@ -68,9 +68,36 @@ fcomp cyclic_shift(int u, int v, int n) {
 fcomp y(int i, int v, int n) {
     fcomp sum = {0,0};
     for(int m=0; m < LRA; m++) {
-        sum += cyclic_shift(u[i],v,m) * exp(fcomp(0, -2*M_PI*m*n/LRA));
+        sum += cyclic_shift(U[i],v,m) * exp(fcomp(0, -2*M_PI*m*n/LRA));
     }
     return sum;
+}
+
+vector<fcomp> create_preamble(vector<fcomp> data, int frequency_offset, int resources_blocks) {
+    vector<fcomp> preamble (1024, {0,0});
+    int f_start = (1024 - 12 * resources_blocks) / 2 + frequency_offset;
+    for(int f = 0; f < data.size(); f++) {
+        preamble[f_start+f] = data[f];
+    }
+    return preamble;
+}
+
+vector<fcomp> split_and_concat(vector<fcomp> v) {
+    size_t const half_size = v.size() / 2;
+    vector<fcomp> low(v.begin(), v.begin()+half_size);
+    vector<fcomp> high(v.begin()+half_size, v.end());
+
+    vector<fcomp> final;
+    set_union(high.begin(), high.end(), low.begin(), low.end(), back_inserter(final));
+    return final;
+}
+
+vector<vector<float>> fcomp2array(vector<fcomp> v) {
+    vector<vector<float>> v2(v.size(), vector<float>(2,0));
+    for(int i=0; i < v.size(); i++) {
+        v2[i] = {v[i].real(), v[i].imag()};
+        return v2;
+    }
 }
 
 /*

@@ -40,7 +40,14 @@ int main() {
     }
 
     int preamble_num = rand() % 64;
-    vector<fcomp> preamble = zadoff_mat[preamble_num];
+    vector<fcomp> data = zadoff_mat[preamble_num];
+
+    vector<fcomp> preamble = create_preamble(data, 0, 48);
+    vector<fcomp> sorted_preamble = split_and_concat(preamble);
+
+    vector<vector<float>> data_for_ifft = fcomp2array(sorted_preamble);
+
+
 
 
 
