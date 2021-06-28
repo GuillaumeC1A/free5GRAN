@@ -427,9 +427,9 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
   cout << "Finishing recv thread" << endl;
 }
 
-void free5GRAN::usrp_b200::start_transmitting(std::vector<std::complex<float>> buffs, int samps_to_send, uhd::time_spec_t time_to_send) const {
+void free5GRAN::usrp_b200::start_transmitting(bool &stop_signal_called,std::vector<std::complex<float>> &buffs, int samps_to_send, uhd::time_spec_t time_to_send) const {
   cout << endl;
-  bool stop_signal_called = false;
+
   size_t samples_sent = 0;
   size_t tmp = -1;
   uhd::tx_metadata_t md;
@@ -461,4 +461,8 @@ void free5GRAN::usrp_b200::start_transmitting(std::vector<std::complex<float>> b
 
   }
 
+}
+
+void free5GRAN::usrp_b200::set_clock_to_zero(){
+  this->usrp->set_time_next_pps(uhd::time_spec_t(0.0));
 }

@@ -283,26 +283,15 @@ void scan_bands(vector<free5GRAN::band> BANDS,
   } else {
     cout << "Using USRP " << chosen_device.type << " device" << endl;
   }
-  /*
-   * Create RF device depending on RF type.
-   */
+
   double bandwidth = 30.72e6;
-  free5GRAN::rf* rf_device;
-  if (chosen_device.type == "b200") {
-    rf_device = new free5GRAN::usrp_b200(bandwidth, freq, gain, bandwidth,
+  free5GRAN::usrp_b200* rf_device;
+
+  rf_device = new free5GRAN::usrp_b200(bandwidth, freq, gain, bandwidth,
                                          chosen_device, &rf_buff);
-  } else if (chosen_device.type == "x300") {
-    rf_device = new free5GRAN::usrp_x300(bandwidth, freq, gain, bandwidth,
-                                         chosen_device, &rf_buff);
-  }
-#ifdef INCLUDE_N210_OPT
-  else if (chosen_device.type == "usrp2") {
-    rf_device = new free5GRAN::usrp_usrp2(bandwidth, freq, gain, bandwidth,
-                                          chosen_device, &rf_buff);
-  }
-#endif
-  else {
-    cout << "Unsupported RF device" << endl;
+
+  if (chosen_device.type != "b200") {
+    cout << "Device is not b200, stopping" << endl;
     return;
   }
 
@@ -317,11 +306,35 @@ void scan_bands(vector<free5GRAN::band> BANDS,
   // CTRL+C handler
   signal(SIGINT, &sigint);
 
-  // Start receiving primary frames
+
+  //creating dummy buffer
+  std::vector<std::complex<float>> buff_to_transmit(1024*12 + 428, {1,0});
+  int samps_to_send = buff_to_transmit.size();
+
+  //Time sync
+  uhd::time_spec_t start_time(double(1));
+  rf_device->set_clock_to_zero();
+
+
+  // Start thread to receive primary frames
   boost::thread recv_thread(
-      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth] {
-        rf_device->start_loopback_recv(capture0, capture1);
+      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth, start_time] {
+        rf_device->start_loopback_recv(capture0, capture1, start_time);
       });
+
+
+  // Start Tx thread
+  boost::thread tx_thread(
+      [rf_device, &capture0 = stop_signal, &capture1 = buff_to_transmit, start_time, samps_to_send] {
+        rf_device->start_transmitting(capture0,
+                                      capture1,
+                                      samps_to_send,
+                                      start_time);
+      });
+
+
+  // Program will sleep to ensure that nothing is done before receiving starts.
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   free5GRAN::band current_band;
 
