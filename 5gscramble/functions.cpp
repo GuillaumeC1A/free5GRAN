@@ -14,7 +14,8 @@ const int SLOTS_SIZE = 14;
 const int FRAME_SIZE = 2*SLOTS_SIZE;
 
 const int ROOT_SEQUENCE_INDEX = 1;
-const int u = 837;
+const int u[40] = {129,710,140,699,120,719,210,629,168,671,84,755,105,734,93,746,70,769,60,779,
+                   2,837,1,838,56,783,112,727,148,691,80,759,42,797,40,799,35,804,73,766};
 const int FREQUENCY_START = 0;
 
 const int LRA = 139;
@@ -59,15 +60,15 @@ fcomp zadoff_chu(int n, int u) {
     return exp(fcomp(0,-M_PI*u*n*(n+1) / (LRA)));
 }
 
-fcomp cyclic_shift(int u, int nu, int n) {
-    int Cnu = nu * NCS;
-    return zadoff_chu((n + Cnu) % LRA, u);
+fcomp cyclic_shift(int u, int v, int n) {
+    int Cv = v * NCS;
+    return zadoff_chu((n + Cv) % LRA, u);
 }
 
-fcomp y(int u, int nu, int n) {
+fcomp y(int i, int v, int n) {
     fcomp sum = {0,0};
     for(int m=0; m < LRA; m++) {
-        sum += cyclic_shift(u,nu,m) * exp(fcomp(0, -2*M_PI*m*n/LRA));
+        sum += cyclic_shift(u[i],v,m) * exp(fcomp(0, -2*M_PI*m*n/LRA));
     }
     return sum;
 }
