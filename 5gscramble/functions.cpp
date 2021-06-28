@@ -64,7 +64,7 @@ vector<fcomp> split_and_concat(vector<fcomp> v) {
     vector<fcomp> high(v.begin()+half_size, v.end());
 
     vector<fcomp> final;
-    set_union(high.begin(), high.end(), low.begin(), low.end(), back_inserter(final));
+    high.insert(high.end(), low.begin(), low.end());
     return final;
 }
 
