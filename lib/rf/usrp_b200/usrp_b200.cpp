@@ -51,7 +51,8 @@ free5GRAN::usrp_b200::usrp_b200(double sample_rate,
       "send_frame_size=7976, num_recv_frames=256, num_send_frames=256";
   string subdev;
   subdev = (chosen_device.subdev.empty()) ? "A:A" : chosen_device.subdev;
-  string ant("TX/RX");
+  string ant_rx("RX2");
+  string ant_tx("TX/RX");
   string ref;
   ref = (chosen_device.ref.empty()) ? "internal" : chosen_device.ref;
   this->rf_buff = rf_buff;
@@ -70,7 +71,14 @@ free5GRAN::usrp_b200::usrp_b200(double sample_rate,
   this->usrp->set_rx_freq(tune_request);
   this->usrp->set_rx_gain(this->gain);
   this->usrp->set_rx_bandwidth(this->bandwidth);
-  this->usrp->set_rx_antenna(ant);
+  this->usrp->set_rx_antenna(ant_rx);
+       
+  this->usrp->set_tx_subdev_spec(this->subdev);
+  this->usrp->set_tx_rate(this->sample_rate);
+  this->usrp->set_tx_freq(tune_request);
+  this->usrp->set_tx_gain(this->gain);
+  this->usrp->set_tx_bandwidth(this->bandwidth);
+  this->usrp->set_tx_antenna(this->ant_tx);
 }
 
 auto free5GRAN::usrp_b200::getSampleRate() -> double {
