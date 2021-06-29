@@ -314,8 +314,6 @@ void scan_bands(vector<free5GRAN::band> BANDS,
       });
 
 
-  // Program will sleep to ensure that nothing is done before receiving starts.
-  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   free5GRAN::band current_band;
 
@@ -588,6 +586,7 @@ void search_cell_with_defined_params(double frequency,
                                       start_time);
       });
 
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   // Compute PBCH FFT size
   int fft_size = (int)bandwidth / band_info.scs;
   // Instanciate a PHY layer
