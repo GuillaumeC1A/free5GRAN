@@ -307,29 +307,10 @@ void scan_bands(vector<free5GRAN::band> BANDS,
   signal(SIGINT, &sigint);
 
 
-  //creating dummy buffer
-  std::vector<std::complex<float>> buff_to_transmit(1024*12 + 428, {1,0});
-  int samps_to_send = buff_to_transmit.size();
-
-  //Time sync
-  uhd::time_spec_t start_time(double(1));
-  rf_device->set_clock_to_zero();
-
-
   // Start thread to receive primary frames
   boost::thread recv_thread(
-      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth, start_time] {
-        rf_device->start_loopback_recv(capture0, capture1, start_time);
-      });
-
-
-  // Start Tx thread
-  boost::thread tx_thread(
-      [rf_device, &capture0 = stop_signal, &capture1 = buff_to_transmit, start_time, samps_to_send] {
-        rf_device->start_transmitting(capture0,
-                                      capture1,
-                                      samps_to_send,
-                                      start_time);
+      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth] {
+        rf_device->start_loopback_recv(capture0, capture1);
       });
 
 
@@ -551,22 +532,12 @@ void search_cell_with_defined_params(double frequency,
    * Create RF device depending on RF type.
    */
   double bandwidth = 30.72e6;
-  free5GRAN::rf* rf_device;
-  if (chosen_device.type == "b200") {
-    rf_device = new free5GRAN::usrp_b200(bandwidth, frequency, gain, bandwidth,
-                                         chosen_device, &rf_buff);
-  } else if (chosen_device.type == "x300") {
-    rf_device = new free5GRAN::usrp_x300(bandwidth, frequency, gain, bandwidth,
-                                         chosen_device, &rf_buff);
-  }
-#ifdef INCLUDE_N210_OPT
-  else if (chosen_device.type == "usrp2") {
-    rf_device = new free5GRAN::usrp_usrp2(bandwidth, frequency, gain, bandwidth,
-                                          chosen_device, &rf_buff);
-  }
-#endif
-  else {
-    cout << "Unsupported RF device" << endl;
+  free5GRAN::usrp_b200* rf_device;
+
+    rf_device = new free5GRAN::usrp_b200(bandwidth, frequency, gain, bandwidth, chosen_device, &rf_buff);
+
+  if (chosen_device.type != "b200"){
+    cout << "Unsupported RF device : only b200 is supported" << endl;
     return;
   }
 
@@ -589,10 +560,32 @@ void search_cell_with_defined_params(double frequency,
   // CTRL+C handler
   signal(SIGINT, &sigint);
 
+  //creating dummy buffer
+  std::vector<std::complex<float>> buff_to_transmit(1024*12 + 428);
+  for (int i = 0; i<buff_to_transmit.size(); i++){
+    buff_to_transmit[i] = complex(i,0);
+  }
+
+  int samps_to_send = buff_to_transmit.size();
+
+  //Time sync
+  uhd::time_spec_t start_time(double(1));
+  rf_device->set_clock_to_zero();
+
   // Start receiving primary frames
   boost::thread recv_thread(
-      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth] {
-        rf_device->start_loopback_recv(capture0, capture1);
+      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth, start_time] {
+        rf_device->start_loopback_recv(capture0, capture1, start_time);
+      });
+
+
+  //Start Tx thread
+  boost::thread tx_thread(
+      [rf_device, &capture0 = stop_signal, &capture1 = buff_to_transmit, start_time, samps_to_send] {
+        rf_device->start_transmitting(capture0,
+                                      capture1,
+                                      samps_to_send,
+                                      start_time);
       });
 
   // Compute PBCH FFT size
@@ -657,6 +650,21 @@ phy_initialization:
     rf_device->adjust_frames(sync_object, capture0, capture1,
                              local_stop_signal);
   });
+
+  //Updating the buffer after sync
+
+  vector<complex<float>> tmp_buffer = buff_to_transmit;
+
+  for (int i=0 ;i + sync_object.sync_index < tmp_buffer.size(); i++){
+    if (i + sync_object.sync_index < tmp_buffer.size()) {
+      tmp_buffer[i + sync_object.sync_index] = buff_to_transmit[i];
+    }
+    else {
+      tmp_buffer[i + sync_object.sync_index - tmp_buffer.size()] = buff_to_transmit[i];
+    }
+  }
+
+  buff_to_transmit = tmp_buffer;
 
   // Stop receive, resync and adjust threads
   resync_thread.join();
