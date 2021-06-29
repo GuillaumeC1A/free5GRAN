@@ -563,7 +563,7 @@ void search_cell_with_defined_params(double frequency,
   //creating dummy buffer
   std::vector<std::complex<float>> buff_to_transmit(1024*12 + 428);
   for (int i = 0; i<buff_to_transmit.size(); i++){
-    buff_to_transmit[i] = complex(i,0);
+    buff_to_transmit[i] = complex(0,0);
   }
 
   int samps_to_send = buff_to_transmit.size();
@@ -635,7 +635,7 @@ phy_initialization:
   // resynchronization threads
   sem_t cont_sync_sem;
   sync_object.cont_sync_sem = &cont_sync_sem;
-  sem_init(sync_object.cont_sync_sem, 1, 0);
+  sem_init(sync_object.cont_sync_sem, 0, 0);
 
   // resync_thread will resynchronize with cell continuously
   boost::thread resync_thread(
@@ -665,6 +665,7 @@ phy_initialization:
   }
 
   buff_to_transmit = tmp_buffer;
+  buff_to_transmit[0] = complex(sync_object.sync_index, 0); // FOR TESTING PURPOSE
 
   // Stop receive, resync and adjust threads
   resync_thread.join();

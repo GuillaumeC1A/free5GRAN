@@ -449,7 +449,7 @@ void free5GRAN::usrp_b200::start_transmitting(bool &stop_signal_called,std::vect
 
     samples_sent = tx_stream->send(&buffs.front(), buffs.size(), md);
     if (true) {
-      printf ( "\rfirst sample sent is  %ld             ",buffs[0] );
+      printf ( "\rfirst sample sent is  %f             ",buffs[0].real() );
       fflush(stdout);
     }
     tmp = samples_sent;
