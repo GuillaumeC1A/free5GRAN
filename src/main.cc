@@ -587,6 +587,7 @@ void search_cell_with_defined_params(double frequency,
       });
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
+
   // Compute PBCH FFT size
   int fft_size = (int)bandwidth / band_info.scs;
   // Instanciate a PHY layer

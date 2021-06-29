@@ -371,7 +371,7 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
     while (total_rcvd_samples < buff_size) {
       // Receive samples
       size_t num_rx_samps = rx_stream->recv(&new_elem.buffer.front(),
-                                            buff_size - total_rcvd_samples, md);
+                                            buff_size - total_rcvd_samples, md, 2, false);
       // If receive timeout
       if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
         cout << boost::format("Timeout while streaming") << endl;
