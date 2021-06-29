@@ -10,6 +10,8 @@ const int SLOT = 1;
 const int OCCURENCES = 1;
 const int DURATION = 12;
 
+const int MS = 30720;
+
 const int SLOTS_SIZE = 14;
 const int FRAME_SIZE = 2*SLOTS_SIZE;
 
@@ -157,11 +159,10 @@ vector<fcomp> generate_PRACH() {
 
 
 vector<fcomp> place_bloc(vector<fcomp> bloc) {
-    int n = (1024*14 + 88 + 72)*2;
-    vector<fcomp> buffer(n*10);
+    vector<fcomp> buffer(MS*10);
     int t = 0;
-    t += FRAME * n;
-    t += SLOT * n / 2;
+    t += FRAME * MS;
+    t += SLOT * MS / 2;
     t += 1024 +88 + 1024 +72;
 
     for(int i=0; i < bloc.size(); i++) {
