@@ -2,6 +2,7 @@
 #include <complex>
 #include <vector>
 #include <tuple>
+#include <fstream>
 #include "functions.h"
 
 using namespace std;
@@ -11,15 +12,14 @@ tuple<int, int> calc_position;
 
 int main() {
 
-    vector<fcomp> buffer = generate_PRACH();
+    vector<fcomp> bloc = generate_PRACH();
 
-    for(int i=0; i<buffer.size(); i++) {
-        if(buffer[i].real() != 0 || buffer[i].imag() != 0) {
-            cout << "i:" << i << " -> " << buffer [i] << endl;
-        }
+    vector<fcomp> buffer = place_bloc(bloc);
+
+    ofstream file("data");
+    for(fcomp v : buffer) {
+        file << v << endl;
     }
-
-    
 
 
     return 0;

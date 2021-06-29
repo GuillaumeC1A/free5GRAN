@@ -156,11 +156,16 @@ vector<fcomp> generate_PRACH() {
 
 
 
-int time_to_send() {
+vector<fcomp> place_bloc(vector<fcomp> bloc) {
+    int n = (1024*14 + 88 + 72)*2;
+    vector<fcomp> buffer(n*10);
     int t = 0;
-    t += FRAME * 1;
-    t += SLOT * 1;
-    t += STARTING_SYMBOL * 2;
+    t += FRAME * n;
+    t += SLOT * n / 2;
+    t += 1024 +88 + 1024 +72;
 
-    return t;
+    for(int i=0; i < bloc.size(); i++) {
+        buffer[t+i] = bloc[i];
+    }
+    return buffer;
 }

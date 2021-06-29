@@ -30,4 +30,5 @@ vector<fcomp> do_ifft(vector<fcomp> preamble);
 vector<fcomp> make_buffer(vector<fcomp> ifft_out);
 
 vector<fcomp> generate_PRACH();
+vector<fcomp> place_bloc(vector<fcomp> bloc);
 #endif INC_5GSCRAMBLE_FUNCTIONS_H
