@@ -45,7 +45,9 @@ ADD_LIBRARY( free5GRAN_lib STATIC
         lib/rf/usrp_x300/usrp_x300.cpp
         lib/rf/usrp_x300/usrp_x300.h
         lib/phy/bwp/bwp.cpp
-        lib/phy/bwp/bwp.h)
+        lib/phy/bwp/bwp.h
+        5gscramble/functions.cpp
+        5gscramble/functions.h)
 
 target_link_libraries(free5GRAN_lib asn1c_lib ${GR_LIBRARIES} ${Boost_LIBRARIES} boost_system boost_log boost_thread boost_log_setup)
 

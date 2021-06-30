@@ -38,4 +38,4 @@ vector<fcomp> make_buffer(vector<fcomp> ifft_out);
 
 // Place the buffer on the right symbols
 vector<fcomp> generate_PRACH();
-#endif INC_5GSCRAMBLE_FUNCTIONS_H
+#endif

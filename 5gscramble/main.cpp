@@ -13,7 +13,7 @@ tuple<int, int> calc_position;
 int main() {
 
     // Generate the PRACH
-    vector<fcomp> buffer = generate_PRACH();
+    vector<fcomp> buffer = free5GRAN::prach::generate_PRACH();
 
     //Writing the PRACH in a file to be used in another program
     ofstream file("data");
