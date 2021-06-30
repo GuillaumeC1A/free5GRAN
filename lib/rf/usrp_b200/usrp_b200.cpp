@@ -72,7 +72,7 @@ free5GRAN::usrp_b200::usrp_b200(double sample_rate,
   this->usrp->set_rx_gain(this->gain);
   this->usrp->set_rx_bandwidth(this->bandwidth);
   this->usrp->set_rx_antenna(ant_rx);
-       
+
   this->usrp->set_tx_subdev_spec(subdev);
   this->usrp->set_tx_rate(this->sample_rate);
   this->usrp->set_tx_freq(tune_request);
@@ -238,6 +238,7 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
 
   bool notified_all = false;
   bool last_notify = false;
+  bool first_iter = true;
 
   // Start rx stream
   rx_stream->issue_stream_cmd(stream_cmd);
@@ -275,6 +276,12 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
       // Increment the samples counter
       total_rcvd_samples += num_rx_samps;
     }
+    if (first_iter){
+      first_iter = false;
+      this->tick_first_sample = md.time_spec.get_tick_count( 30.72e6 ) % (int)( 0.01 * 30.72e6 );
+      cout << "FIRST SAMPLE TICK: " << this->tick_first_sample << endl;
+    }
+    //cout << "FIRST TICK: " << md.time_spec.get_tick_count( 30.72e6) << endl;
     // Set new frame id to primary frame id
     new_elem.frame_id = primary_frame_id;
     // Push the new frame inside the primary buffer
@@ -371,7 +378,7 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
     while (total_rcvd_samples < buff_size) {
       // Receive samples
       size_t num_rx_samps = rx_stream->recv(&new_elem.buffer.front(),
-                                            buff_size - total_rcvd_samples, md, 1);
+                                            buff_size - total_rcvd_samples, md);
       // If receive timeout
       if (md.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT) {
 
@@ -394,6 +401,8 @@ void free5GRAN::usrp_b200::start_loopback_recv(bool& stop_signal,
       // Increment the samples counter
       total_rcvd_samples += num_rx_samps;
     }
+
+    cout << "FIRST TICK: " << md.time_spec.get_tick_count( 30.72e6) << endl;
     // Set new frame id to primary frame id
     new_elem.frame_id = primary_frame_id;
     // Push the new frame inside the primary buffer
@@ -441,7 +450,7 @@ void free5GRAN::usrp_b200::start_transmitting(bool &stop_signal_called,std::vect
   md.end_of_burst = false;
   md.has_time_spec = true;
   md.time_spec = time_to_send;
-  uhd::stream_args_t stream_args("fc32"); // complex floats
+  uhd::stream_args_t stream_args("fc32", "sc16"); // complex floats
   uhd::tx_streamer::sptr tx_stream = usrp->get_tx_stream(stream_args);
 
 
@@ -452,7 +461,8 @@ void free5GRAN::usrp_b200::start_transmitting(bool &stop_signal_called,std::vect
   while (not stop_signal_called) {
 
     samples_sent = tx_stream->send(&buffs.front(), buffs.size(), md);
-    if (true) {
+    //cout << "SAMPLES SENT " << samples_sent << endl;
+/*    if (true) {
       printf ( "\rfirst sample sent is  %f             ",buffs[0].real() );
       fflush(stdout);
     }
@@ -461,7 +471,9 @@ void free5GRAN::usrp_b200::start_transmitting(bool &stop_signal_called,std::vect
     if(usrp->get_time_now() > time_to_send) {
       md.has_time_spec = false;
       md.start_of_burst = false; // Then it is not the beginning of the transmission
-    }
+    }*/
+    md.has_time_spec = false;
+    md.start_of_burst = false;
 
   }
 

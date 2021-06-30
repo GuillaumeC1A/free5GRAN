@@ -139,7 +139,7 @@ void free5GRAN::rf::adjust_frames(
 }
 
 auto free5GRAN::rf::get_frame_with_parity(int parity)
-    -> free5GRAN::buffer_element {
+-> free5GRAN::buffer_element {
   // If frame buffer is empty
   if (rf_buff->frame_buffer->size() == 0) {
     mutex m;
@@ -261,8 +261,8 @@ void free5GRAN::rf::resynchronization(
     // If (last frame contains SSB) AND ((resynchronization period is over) OR
     // (specific demand for immediate resynchronization))
     if (abs((int)last_elem.frame_id - sync_object.sfn) %
-                (int)(sync_object.ssb_period / 0.01) ==
-            0 &&
+        (int)(sync_object.ssb_period / 0.01) ==
+        0 &&
         (abs((int)last_elem.frame_id - last_resync_frame_id) > resync_period ||
          resync_now)) {
       // Extract signal around expected PSS position with +/- sync_space samples
@@ -271,7 +271,7 @@ void free5GRAN::rf::resynchronization(
         pss_symbols[i] =
             last_elem
                 .buffer[(frame_size + (sync_object.pss_index - sync_space + i) %
-                                          frame_size) %
+                                      frame_size) %
                         frame_size];
       }
       // Search PSS in extracted signal

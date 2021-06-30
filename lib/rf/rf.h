@@ -44,6 +44,7 @@ class rf {
   uhd::usrp::multi_usrp::sptr usrp;  //< RF device pointer
   size_t primary_frame_id = 0, frame_id = 0;  //< frame ID
   free5GRAN::rf_buffer* rf_buff;              //< Shared buffer
+  long tick_first_sample;
 
  public:
   rf() = default;
@@ -86,6 +87,10 @@ class rf {
                    bool& timeout);
 
   auto getPrimaryFrameId() -> size_t { return this->primary_frame_id; }
+
+  long getTick(){
+    return this->tick_first_sample;
+  }
 };
 }  // namespace free5GRAN
 

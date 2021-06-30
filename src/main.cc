@@ -288,7 +288,7 @@ void scan_bands(vector<free5GRAN::band> BANDS,
   free5GRAN::usrp_b200* rf_device;
 
   rf_device = new free5GRAN::usrp_b200(bandwidth, freq, gain, bandwidth,
-                                         chosen_device, &rf_buff);
+                                       chosen_device, &rf_buff);
 
   if (chosen_device.type != "b200") {
     cout << "Device is not b200, stopping" << endl;
@@ -330,7 +330,7 @@ void scan_bands(vector<free5GRAN::band> BANDS,
     current_band = i;
     BOOST_LOG_TRIVIAL(info) << "###########################################";
     BOOST_LOG_TRIVIAL(info)
-        << "Scanning band n" + to_string(current_band.number);
+      << "Scanning band n" + to_string(current_band.number);
     /*
      * Search a cell by scanning different possible GSCN
      */
@@ -345,8 +345,8 @@ void scan_bands(vector<free5GRAN::band> BANDS,
       bool local_stop_signal = false;
 
       BOOST_LOG_TRIVIAL(info) << "Scanning gscn= " + to_string(gscn) +
-                                     " and freq= " + to_string(freq / 1e6) +
-                                     " MHz";
+                                 " and freq= " + to_string(freq / 1e6) +
+                                 " MHz";
 
       free5GRAN::bandwidth_info band_info;
       if (freq < 3000e6) {
@@ -363,19 +363,19 @@ void scan_bands(vector<free5GRAN::band> BANDS,
       usleep(1100000);
 
       cout << "\r## Searching in band n" + to_string(current_band.number) +
-                  " - " + to_string(freq / 1e6) + " MHz" + " - " +
-                  to_string((((float)gscn - (float)current_band.min_gscn) /
-                             ((float)current_band.max_gscn -
-                              (float)current_band.min_gscn)) *
-                            100.0) +
-                  "% (found " + to_string(found_cells.size()) + " cells)";
+              " - " + to_string(freq / 1e6) + " MHz" + " - " +
+              to_string((((float)gscn - (float)current_band.min_gscn) /
+                         ((float)current_band.max_gscn -
+                          (float)current_band.min_gscn)) *
+                        100.0) +
+              "% (found " + to_string(found_cells.size()) + " cells)";
       // Compute PBCH FFT size
       int fft_size = (int)bandwidth / band_info.scs;
       // Instanciate a PHY layer
       phy phy_layer(rf_device, ssb_period, fft_size, band_info.scs,
                     current_band, &rf_buff, &stop_signal);
 
-    phy_initialization:
+      phy_initialization:
       // sync_object will contain synchronization variables that will be shared
       // between threads
       free5GRAN::synchronization_object sync_object;
@@ -418,8 +418,8 @@ void scan_bands(vector<free5GRAN::band> BANDS,
 
         // resync_thread will resynchronize with cell continuously
         boost::thread resync_thread([rf_device, &sync_object,
-                                     &capture0 = stop_signal,
-                                     &local_stop_signal] {
+                                        &capture0 = stop_signal,
+                                        &local_stop_signal] {
           rf_device->resynchronization(sync_object, capture0,
                                        local_stop_signal);
         });
@@ -427,7 +427,7 @@ void scan_bands(vector<free5GRAN::band> BANDS,
         // gNodeB-synchronized frames
         boost::thread adjust_thread(
             [rf_device, &sync_object, capture0 = 0.01 * bandwidth,
-             &capture1 = stop_signal, &local_stop_signal] {
+                &capture1 = stop_signal, &local_stop_signal] {
               rf_device->adjust_frames(sync_object, capture0, capture1,
                                        local_stop_signal);
             });
@@ -532,7 +532,7 @@ void search_cell_with_defined_params(double frequency,
   double bandwidth = 30.72e6;
   free5GRAN::usrp_b200* rf_device;
 
-    rf_device = new free5GRAN::usrp_b200(bandwidth, frequency, gain, bandwidth, chosen_device, &rf_buff);
+  rf_device = new free5GRAN::usrp_b200(bandwidth, frequency, gain, bandwidth, chosen_device, &rf_buff);
 
   if (chosen_device.type != "b200"){
     cout << "Unsupported RF device : only b200 is supported" << endl;
@@ -559,34 +559,21 @@ void search_cell_with_defined_params(double frequency,
   signal(SIGINT, &sigint);
 
   //creating dummy buffer
-  std::vector<std::complex<float>> buff_to_transmit(1024*12 + 428);
-  for (int i = 0; i<buff_to_transmit.size(); i++){
-    buff_to_transmit[i] = complex(0,0);
-  }
+  std::vector<std::complex<float>> buff_to_transmit(0.01 * bandwidth, {0,0});
 
   int samps_to_send = buff_to_transmit.size();
 
   //Time sync
-  uhd::time_spec_t start_time(double(1));
-  rf_device->set_clock_to_zero();
+  //uhd::time_spec_t start_time(double(1));
+  //rf_device->set_clock_to_zero();
 
   // Start receiving primary frames
   boost::thread recv_thread(
-      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth, start_time] {
-        rf_device->start_loopback_recv(capture0, capture1, start_time);
+      [rf_device, &capture0 = stop_signal, capture1 = 0.01 * bandwidth] {
+        rf_device->start_loopback_recv(capture0, capture1);
       });
 
 
-  //Start Tx thread
-  boost::thread tx_thread(
-      [rf_device, &capture0 = stop_signal, &capture1 = buff_to_transmit, start_time, samps_to_send] {
-        rf_device->start_transmitting(capture0,
-                                      capture1,
-                                      samps_to_send,
-                                      start_time);
-      });
-
-  std::this_thread::sleep_for(std::chrono::seconds(1));
 
   // Compute PBCH FFT size
   int fft_size = (int)bandwidth / band_info.scs;
@@ -594,7 +581,7 @@ void search_cell_with_defined_params(double frequency,
   phy phy_layer(rf_device, ssb_period, fft_size, band_info.scs, band, &rf_buff,
                 &stop_signal);
 
-phy_initialization:
+  phy_initialization:
   // sync_object will contain synchronization variables that will be shared
   // between threads
   free5GRAN::synchronization_object sync_object;
@@ -629,10 +616,23 @@ phy_initialization:
       goto phy_initialization;
     }
   }
+
+  cout << "SYNC VALIDATED WITH INDEX " << sync_object.sync_index << endl;
+  long tx_stream_tick = (sync_object.sync_index + rf_device->getTick()) % (int)(0.01 * 30.72e6);
+  cout << "TX STREAM START TICK " << tx_stream_tick << endl;
+  uhd::time_spec_t start_time(uhd::time_spec_t::from_ticks(tx_stream_tick, 30.72e6));
+  boost::thread tx_thread(
+      [rf_device, &capture0 = stop_signal, &capture1 = buff_to_transmit, start_time, samps_to_send] {
+        rf_device->start_transmitting(capture0,
+                                      capture1,
+                                      samps_to_send,
+                                      start_time);
+      });
+
   // If CRC validated
   bool local_stop_signal = false;
   // cont_sync_sem is a semaphore variable for synchronizing adjust and
-  // resynchronization threads
+  // resynchronization threads§
   sem_t cont_sync_sem;
   sync_object.cont_sync_sem = &cont_sync_sem;
   sem_init(sync_object.cont_sync_sem, 0, 0);
@@ -645,27 +645,11 @@ phy_initialization:
   // adjust_thread continuously adjusts primary frames into gNodeB-synchronized
   // frames
   boost::thread adjust_thread([rf_device, &sync_object,
-                               capture0 = 0.01 * bandwidth,
-                               &capture1 = stop_signal, &local_stop_signal] {
+                                  capture0 = 0.01 * bandwidth,
+                                  &capture1 = stop_signal, &local_stop_signal] {
     rf_device->adjust_frames(sync_object, capture0, capture1,
                              local_stop_signal);
   });
-
-  //Updating the buffer after sync
-
-  vector<complex<float>> tmp_buffer = buff_to_transmit;
-
-  for (int i=0 ;i + sync_object.sync_index < tmp_buffer.size(); i++){
-    if (i + sync_object.sync_index < tmp_buffer.size()) {
-      tmp_buffer[i + sync_object.sync_index] = buff_to_transmit[i];
-    }
-    else {
-      tmp_buffer[i + sync_object.sync_index - tmp_buffer.size()] = buff_to_transmit[i];
-    }
-  }
-
-  buff_to_transmit = tmp_buffer;
-  buff_to_transmit[0] = complex(sync_object.sync_index, 0); // FOR TESTING PURPOSE
 
   // Stop receive, resync and adjust threads
   resync_thread.join();
