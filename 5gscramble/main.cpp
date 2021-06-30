@@ -12,15 +12,14 @@ tuple<int, int> calc_position;
 
 int main() {
 
-    vector<fcomp> bloc = generate_PRACH();
+    // Generate the PRACH
+    vector<fcomp> buffer = generate_PRACH();
 
-    vector<fcomp> buffer = place_bloc(bloc);
-
+    //Writing the PRACH in a file to be used in another program
     ofstream file("data");
     for(fcomp v : buffer) {
         file << v << endl;
     }
-
 
     return 0;
 }
