@@ -558,9 +558,8 @@ void search_cell_with_defined_params(double frequency,
 
   //creating dummy buffer
   std::vector<std::complex<float>> buff_to_transmit = generate_PRACH();
-
   int samps_to_send = buff_to_transmit.size();
-
+  free5GRAN::phy::signal_processing::transpose_signal(&buff_to_transmit, -720000,(int)rf_device->getSampleRate(), samps_to_send);
   //Time sync
   //uhd::time_spec_t start_time(double(1));
   //rf_device->set_clock_to_zero();
