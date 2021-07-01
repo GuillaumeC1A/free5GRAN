@@ -528,7 +528,7 @@ void search_cell_with_defined_params(double frequency,
    * Create RF device depending on RF type.
    */
   double bandwidth = 30.72e6;
-  /* ADRIEN MODIF
+
   free5GRAN::usrp_b200* rf_device;
 
   rf_device = new free5GRAN::usrp_b200(bandwidth, frequency, gain, bandwidth, chosen_device, &rf_buff);
@@ -537,25 +537,7 @@ void search_cell_with_defined_params(double frequency,
     cout << "Unsupported RF device : only b200 is supported" << endl;
     return;
   }
-   */
-    free5GRAN::rf* rf_device;
-    if (chosen_device.type == "b200") {
-        rf_device = new free5GRAN::usrp_b200(bandwidth, frequency, gain, bandwidth,
-                                             chosen_device, &rf_buff);
-    } else if (chosen_device.type == "x300") {
-        rf_device = new free5GRAN::usrp_x300(bandwidth, frequency, gain, bandwidth,
-                                             chosen_device, &rf_buff);
-    }
-#ifdef INCLUDE_N210_OPT
-    else if (chosen_device.type == "usrp2") {
-        rf_device = new free5GRAN::usrp_usrp2(bandwidth, frequency, gain, bandwidth,
-                                          chosen_device, &rf_buff);
-  }
-#endif
-    else {
-        cout << "Unsupported RF device" << endl;
-        return;
-    }
+
 
   cout << "########################## Searching cell ##########################"
        << endl;
