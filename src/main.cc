@@ -632,7 +632,7 @@ void search_cell_with_defined_params(double frequency,
   // resynchronization threads§
   sem_t cont_sync_sem;
   sync_object.cont_sync_sem = &cont_sync_sem;
-  sem_init(sync_object.cont_sync_sem, 0, 0);
+  sem_init(sync_object.cont_sync_sem, 1, 0);
 
   // resync_thread will resynchronize with cell continuously
   boost::thread resync_thread(
